@@ -29,7 +29,7 @@ IUSE="acpi multilib x-multilib kernel_FreeBSD kernel_linux tools +X"
 RESTRICT="bindist mirror strip"
 EMULTILIB_PKG="true"
 
-COMMON="app-admin/eselect-opencl
+COMMON="app-eselect/eselect-opencl
 	kernel_linux? ( >=sys-libs/glibc-2.6.1 )
 	x-multilib? (
 		|| (
@@ -42,7 +42,7 @@ COMMON="app-admin/eselect-opencl
 	)
 	multilib? ( app-emulation/emul-linux-x86-baselibs )
 	X? (
-		>=app-admin/eselect-opengl-1.0.9
+		>=app-eselect/eselect-opengl-1.0.9
 	)"
 DEPEND="${COMMON}"
 # Note: do not add !>nvidia-userspace-ver or !<nvidia-userspace-ver
@@ -198,7 +198,7 @@ src_install() {
 		newins "${FILESDIR}"/nvidia-169.07 nvidia.conf
 
 		# Ensures that our device nodes are created when not using X
-		exeinto "$(udev_get_udevdir)"
+		exeinto "$(get_udevdir)"
 		doexe "${FILESDIR}"/nvidia-udev.sh
 		udev_newrules "${FILESDIR}"/nvidia.udev-rule 99-nvidia.rules
 	elif use kernel_FreeBSD; then
@@ -337,6 +337,15 @@ pkg_preinst() {
 	if [ -e "${ROOT}"/etc/env.d/09nvidia ] ; then
 		rm -f "${ROOT}"/etc/env.d/09nvidia
 	fi
+
+	local videogroup="$(getent group video | cut -d ':' -f 3)"
+	if [ -n "${videogroup}" ]; then
+		sed -i -e "s:PACKAGE:${PF}:g" \
+			-e "s:VIDEOGID:${videogroup}:" "${ROOT}"/etc/modprobe.d/nvidia.conf
+	else
+		eerror "Failed to determine the video group gid."
+		die "Failed to determine the video group gid."
+	fi
 }
 
 pkg_postinst() {
@@ -354,15 +363,6 @@ pkg_postinst() {
 		elog "Use the 'nvidia-smi' init script to have your card and fan"
 		elog "speed scale appropriately."
 		elog
-	fi
-
-	local videogroup="$(egetent group video | cut -d ':' -f 3)"
-	if [ -n "${videogroup}" ]; then
-		sed -i -e "s:PACKAGE:${PF}:g" \
-			-e "s:VIDEOGID:${videogroup}:" "${ROOT}"/etc/modprobe.d/nvidia.conf
-	else
-		eerror "Failed to determine the video group gid."
-		die "Failed to determine the video group gid."
 	fi
 }
 

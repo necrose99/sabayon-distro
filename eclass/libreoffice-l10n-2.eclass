@@ -1,4 +1,4 @@
-# Copyright 2004-2012 Sabayon Linux
+# Copyright 2004-2014 Sabayon Linux
 # Distributed under the terms of the GNU General Public License v2
 # $
 
@@ -11,13 +11,13 @@ OO_EXTENSIONS=(
 	"b33775feda3bcf823cad7ac361fd49a6-Sun-ODF-Template-Pack-it_1.0.0.oxt"
 )
 
-inherit base rpm multilib versionator office-ext
+inherit base rpm multilib versionator
 
 MY_LANG=${PN/libreoffice-l10n-/}
 MY_LANG=${MY_LANG/_/-}
 
 # export all the available functions here
-EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_postinst pkg_prerm
+EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install
 
 # @ECLASS-VARIABLE: L10N_LANG
 # @DESCRIPTION:
@@ -60,13 +60,23 @@ else
 	RPM_SUFFIX_LANG="rpm_langpack"
 	RPM_SUFFIX_HELP="rpm_helppack"
 fi
+
+# remove "name_part" when not needed
+if [[ ${PV} = 4.2.6.* || ${PV} = 4.2.6 ]]; then
+	name_part=-secfix
+else
+	name_part=
+fi
+
 # try guessing
 if [ "${LANGPACK_AVAIL}" = "1" ]; then
-	SRC_URI+="${BASE_SRC_URI}/x86/${URI_PREFIX}_${TARBALL_VERSION}_Linux_x86_${RPM_SUFFIX_LANG}_${MY_LANG}.tar.gz"
+	SRC_URI+="${BASE_SRC_URI}/x86/${URI_PREFIX}_${TARBALL_VERSION}${name_part}_Linux_x86_${RPM_SUFFIX_LANG}_${MY_LANG}.tar.gz"
 fi
 if [ "${HELPPACK_AVAIL}" = "1" ]; then
-	SRC_URI+=" ${BASE_SRC_URI}/x86/${URI_PREFIX}_${TARBALL_VERSION}_Linux_x86_${RPM_SUFFIX_HELP}_${MY_LANG}.tar.gz"
+	SRC_URI+=" ${BASE_SRC_URI}/x86/${URI_PREFIX}_${TARBALL_VERSION}${name_part}_Linux_x86_${RPM_SUFFIX_HELP}_${MY_LANG}.tar.gz"
 fi
+
+unset name_part
 
 IUSE=""
 
@@ -140,14 +150,4 @@ libreoffice-l10n-2_src_install() {
 	fi
 	# remove extensions that are in the l10n for some weird reason
 	rm -rf "${ED}"/usr/$(get_libdir)/libreoffice/share/extensions/
-
-	echo "${OO_EXTENSIONS[@]}"
-	office-ext_src_install
-}
-
-libreoffice-l10n-2_pkg_postinst() {
-	office-ext_pkg_postinst
-}
-libreoffice-l10n-2_pkg_prerm() {
-	office-ext_pkg_prerm
 }

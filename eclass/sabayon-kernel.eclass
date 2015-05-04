@@ -281,6 +281,7 @@ _is_kernel_lts() {
 	[ "${_ver}" = "3.4" ] && return 0
 	[ "${_ver}" = "3.10" ] && return 0
 	[ "${_ver}" = "3.12" ] && return 0
+	[ "${_ver}" = "3.14" ] && return 0
 	return 1
 }
 
@@ -352,7 +353,7 @@ if [ -n "${K_ONLY_SOURCES}" ] || [ -n "${K_FIRMWARE_PACKAGE}" ]; then
 	DEPEND="sys-apps/sed"
 	RDEPEND="${RDEPEND}"
 else
-	IUSE="dmraid dracut iscsi luks lvm mdadm plymouth splash"
+	IUSE="btrfs dmraid dracut iscsi luks lvm mdadm plymouth splash"
 	if [ -n "${K_SABKERNEL_ZFS}" ]; then
 		IUSE="${IUSE} zfs"
 	fi
@@ -364,6 +365,7 @@ else
 		arm? ( dev-embedded/u-boot-tools )
 		amd64? ( sys-apps/v86d )
 		x86? ( sys-apps/v86d )
+		btrfs? ( sys-fs/btrfs-progs )
 		splash? ( x11-themes/sabayon-artwork-core )
 		lvm? ( sys-fs/lvm2 sys-block/thin-provisioning-tools )
 		plymouth? (
@@ -516,7 +518,8 @@ _kernel_src_compile() {
 
 	cd "${S}" || die
 	local GKARGS=()
-	GKARGS+=( "--no-save-config" "--e2fsprogs" "--udev" )
+	GKARGS+=( "--no-menuconfig" "--no-save-config" "--e2fsprogs" "--udev" )
+	use btrfs && GKARGS+=( "--btrfs" )
 	use splash && GKARGS+=( "--splash=sabayon" )
 	use plymouth && GKARGS+=( "--plymouth" "--plymouth-theme=${PLYMOUTH_THEME}" )
 	use dmraid && GKARGS+=( "--dmraid" )
@@ -785,8 +788,8 @@ sabayon-kernel_uimage_config() {
 	# 1. /boot/uImage symlink is broken (pkg_postrm)
 	# 2. /boot/uImage symlink doesn't exist (pkg_postinst)
 
-	if ! has_version app-admin/eselect-uimage; then
-		ewarn "app-admin/eselect-uimage not installed"
+	if ! has_version app-eselect/eselect-uimage; then
+		ewarn "app-eselect/eselect-uimage not installed"
 		ewarn "If you are using this tool, please install it"
 		return 0
 	fi
@@ -820,8 +823,8 @@ sabayon-kernel_bzimage_config() {
 	use x86 && kern_arch="x86"
 	use amd64 && kern_arch="x86_64"
 
-	if ! has_version app-admin/eselect-bzimage; then
-		ewarn "app-admin/eselect-bzimage not installed"
+	if ! has_version app-eselect/eselect-bzimage; then
+		ewarn "app-eselect/eselect-bzimage not installed"
 		ewarn "If you are using this tool, please install it"
 		return 0
 	fi

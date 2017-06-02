@@ -17,7 +17,7 @@ SRC_URI="
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 
 IUSE="ipv6 libressl +nse system-lua ncat ndiff nls nmap-update nping ssl zenmap"
 # not used in split nmap ebuild, but retained for compatibility with Portage
